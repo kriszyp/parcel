@@ -334,6 +334,11 @@ export async function runBundles(
   // $FlowFixMe[prop-missing]
   ctx.sideEffectNoop = () => {};
 
+  // The output variable is used to pass results of the tests. Define it so that reassigning
+  // it doesn't fail in strict mode.
+  // $FlowFixMe[prop-missing]
+  ctx.output = undefined;
+
   vm.createContext(ctx);
   let esmOutput;
   if (outputFormat === 'esmodule') {
