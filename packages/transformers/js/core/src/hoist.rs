@@ -677,7 +677,7 @@ impl<'a> Fold for Hoist<'a> {
             });
           }
         }
-        return Expr::Ident(ident.fold_children_with(self));
+        return Expr::Ident(ident.fold_with(self));
       }
       _ => {}
     }
