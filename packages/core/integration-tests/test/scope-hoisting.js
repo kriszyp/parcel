@@ -5246,6 +5246,23 @@ describe('scope hoisting', function () {
     assert.deepEqual(res, 'x: 123');
   });
 
+  it('should call named imports without this context', async function () {
+    let b = await bundle(
+      path.join(__dirname, 'integration/js-import-this/index.js'),
+    );
+    let res = await run(b);
+    assert.deepEqual(res, {
+      unwrappedNamed: [true, false],
+      unwrappedDefault: [true, false],
+      // TODO: this should actually be `[false, true]` but optimize the `ns.foo` expression
+      // into a named import, so tha namespace isn't available anymore.
+      unwrappedNamespace: [true, false],
+      wrappedNamed: [true, false],
+      wrappedDefault: [true, false],
+      wrappedNamespace: [false, true],
+    });
+  });
+
   it('should insert the prelude for sibling bundles referenced in HTML', async function () {
     let b = await bundle(
       path.join(
