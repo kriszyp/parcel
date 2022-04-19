@@ -97,8 +97,7 @@ async function collectDependencies(
         const assets = sc[k] || [];
         for (let j = 0; j < assets.length; ++j) {
           assets[j] = asset.addURLDependency(assets[j], {
-            // This causes the packager to re-run when these assets update
-            priority: 'parallel',
+            bundleBehavior: 'isolated',
             loc: {
               filePath,
               ...getJSONSourceLocation(
@@ -185,11 +184,13 @@ async function collectDependencies(
       // TODO: this doesn't support Parcel resolution
       const currentEntry = program.web_accessible_resources[i];
       const files = isMV2 ? [currentEntry] : currentEntry.resources;
+      let currentFiles = [];
       for (let j = 0; j < files.length; ++j) {
         const globFiles = (
           await glob(path.join(assetDir, files[j]), fs, {})
         ).map(fp =>
           asset.addURLDependency(path.relative(assetDir, fp), {
+            bundleBehavior: 'isolated',
             needsStableName: true,
             loc: {
               filePath,
@@ -203,12 +204,13 @@ async function collectDependencies(
             },
           }),
         );
-        if (isMV2) {
-          war = war.concat(globFiles);
-        } else {
-          currentEntry.resources = globFiles;
-          war.push(currentEntry);
-        }
+        currentFiles = currentFiles.concat(globFiles);
+      }
+      if (isMV2) {
+        war = war.concat(currentFiles);
+      } else {
+        currentEntry.resources = currentFiles;
+        war.push(currentEntry);
       }
     }
     program.web_accessible_resources = war;
@@ -224,6 +226,7 @@ async function collectDependencies(
     const obj = parent[lastLoc];
     if (typeof obj == 'string')
       parent[lastLoc] = asset.addURLDependency(obj, {
+        bundleBehavior: 'isolated',
         loc: {
           filePath,
           ...getJSONSourceLocation(ptrs[location], 'value'),
@@ -233,6 +236,7 @@ async function collectDependencies(
     else {
       for (const k of Object.keys(obj)) {
         obj[k] = asset.addURLDependency(obj[k], {
+          bundleBehavior: 'isolated',
           loc: {
             filePath,
             ...getJSONSourceLocation(ptrs[location + '/' + k], 'value'),
@@ -247,6 +251,7 @@ async function collectDependencies(
       program.background.page = asset.addURLDependency(
         program.background.page,
         {
+          bundleBehavior: 'isolated',
           loc: {
             filePath,
             ...getJSONSourceLocation(ptrs['/background/page'], 'value'),
@@ -285,6 +290,7 @@ async function collectDependencies(
       program.background.service_worker = asset.addURLDependency(
         program.background.service_worker,
         {
+          bundleBehavior: 'isolated',
           loc: {
             filePath,
             ...getJSONSourceLocation(
